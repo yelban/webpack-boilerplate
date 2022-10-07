@@ -1,14 +1,14 @@
 const path = require('path');
-// const webpack = require('webpack');
+const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-// const CopyPlugin = require('copy-webpack-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 // const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const env = process.env.NODE_ENV || 'development';
-// const target = process.env.TARGET || 'web';
+const target = process.env.TARGET || 'web';
 
 module.exports = {
 	mode: env,
@@ -17,7 +17,6 @@ module.exports = {
 
 	entry: {
 		index: path.resolve(__dirname, './src/js/index.js'),
-		main: path.resolve(__dirname, './src/js/main.jsx'),
 		// vendors: ['react', 'react-dom', 'react-refresh/runtime'],
 	},
 
@@ -27,7 +26,8 @@ module.exports = {
 		clean: true,
 	},
 
-	// devtool: env === 'production' ? 'source-map' : 'eval-source-map',
+	// prevent HTTP error: status code 404, net::ERR_UNKNOWN_URL_SCHEME
+	devtool: env === 'production' ? false : 'eval-source-map',
 
 	devServer: {
 		static: [
@@ -140,6 +140,11 @@ module.exports = {
 	},
 
 	plugins: [
+		new webpack.DefinePlugin({
+			'process.env.NODE_ENV': JSON.stringify(env),
+			'process.env.TARGET': JSON.stringify(target),
+		}),
+
 		new MiniCssExtractPlugin({
 			filename: 'css/[name].[contenthash:6].css',
 		}),
@@ -147,7 +152,7 @@ module.exports = {
 		new HtmlWebpackPlugin({
 			filename: './index.html',
 			template: './src/index.html',
-			favicon: './src/assets/favicon.ico',
+			// favicon: './src/assets/favicon.ico',
 			inject: 'body',
 			// chunks: ['index', 'main'],
 			// excludeChunks: env === 'production' ? ['ie', 'popular', 'scroll', 'user'] : ['ie', 'user'],
@@ -164,9 +169,25 @@ module.exports = {
 					: false,
 		}),
 
+		new CopyPlugin({
+			patterns: [
+				{
+					from: path.resolve(__dirname, './src/assets/favicon.ico'),
+					to: path.resolve(__dirname, 'dist'),
+				},
+			],
+		}),
+
+		// prevent Promise undefined when use axios in IE11
+		new webpack.ProvidePlugin({
+			Promise: 'es6-promise-promise', // works as expected
+		}),
+
 		// new ReactRefreshWebpackPlugin({
 		// 	forceEnable: true,
 		// }),
+
+		new webpack.ProgressPlugin(),
 	],
 
 	resolve: {
@@ -174,7 +195,7 @@ module.exports = {
 	},
 
 	optimization: {
-		runtimeChunk: 'single', // 確保只有一個實例，避免多個入口點熱更新 ChunkLoadError
+		runtimeChunk: env === 'production' ? false : 'single', // Ensure there is only one instance to avoid multiple entry points for hot updates ChunkLoadError
 		minimizer:
 			env === 'production'
 				? [
