@@ -1,0 +1,21 @@
+{
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		"stylelint.vscode-stylelint",
+		"bradlc.vscode-tailwindcss",
+		"sburg.vscode-javascript-booster",
+		"wix.vscode-import-cost",
+		"christian-kohler.path-intellisense",
+		"formulahendry.auto-rename-tag",
+		"vincaslt.highlight-matching-tag",
+		"dsznajder.es7-react-js-snippets",
+		"styled-components.vscode-styled-components",
+		"steoates.autoimport",
+		"aaron-bond.better-comments",
+		"mikestead.dotenv",
+		"ritwickdey.liveserver",
+		"rangav.vscode-thunder-client",
+		"jock.svg"
+	]
+}
