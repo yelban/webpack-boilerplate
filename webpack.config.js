@@ -5,15 +5,35 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+const dotenv = require('dotenv');
+const fs = require('fs');
 // const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
-const env = process.env.NODE_ENV || 'development';
-const target = process.env.TARGET || 'web';
+// Create the fallback path (the production .env)
+const basePath = path.resolve(__dirname, './.env');
+
+const envPath = `${basePath}.${process.env.NODE_ENV}`;
+
+// Check if the file exists, otherwise fall back to the production .env
+const finalPath = fs.existsSync(envPath) ? envPath : basePath;
+
+// call dotenv and it will return an Object with a parsed key
+const env = dotenv.config({ path: finalPath }).parsed;
+
+const nodeEnv = process.env.NODE_ENV || 'development';
+
+// reduce it to a nice object, the same as before
+const envKeys = Object.keys(env).reduce((prev, next) => {
+	const processEnv = prev;
+	processEnv[`process.env.${next}`] = JSON.stringify(env[next]);
+	return processEnv;
+}, {});
+console.log('envKeys', envKeys);
 
 module.exports = {
-	mode: env,
+	mode: nodeEnv,
 
-	target: env === 'development' ? 'web' : 'browserslist',
+	target: nodeEnv === 'development' ? 'web' : 'browserslist',
 
 	entry: {
 		index: path.resolve(__dirname, './src/js/index.js'),
@@ -140,10 +160,13 @@ module.exports = {
 	},
 
 	plugins: [
-		new webpack.DefinePlugin({
-			'process.env.NODE_ENV': JSON.stringify(env),
-			'process.env.TARGET': JSON.stringify(target),
-		}),
+		new webpack.DefinePlugin(envKeys),
+		// new webpack.DefinePlugin({ 'process.env.NODE_ENV': JSON.stringify(nodeEnv) }),
+
+		// new webpack.DefinePlugin({
+		// 	// 'process.env.NODE_ENV': JSON.stringify(env),
+		// 	// 'process.env.TARGET': JSON.stringify(target),
+		// }),
 
 		new MiniCssExtractPlugin({
 			filename: 'css/[name].[contenthash:6].css',
